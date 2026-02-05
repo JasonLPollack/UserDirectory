@@ -56,9 +56,8 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     is UserDetailScene -> NavEntry(key) {
-                                        val user = userListViewModel.getUserById(key.id) ?: InvalidUser
                                         UserDetail(
-                                            user,
+                                            key.id,
                                             onBack = { backStack.removeLastOrNull() }
                                         )
                                     }

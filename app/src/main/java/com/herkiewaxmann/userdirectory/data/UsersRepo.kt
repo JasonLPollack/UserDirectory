@@ -22,12 +22,23 @@ sealed interface DataStatus<out T> {
 }
 
 @Serializable
+data class DummyJSONAddress(
+    val city: String? = null,
+    val state: String? = null
+)
+
+@Serializable
 data class DummyJSONUser(
     val id: Int,
     val firstName: String,
     val lastName: String,
-    val image: String
+    val image: String,
+    val age: Int,
+    val email: String,
+    val phone: String,
+    val address: DummyJSONAddress
 )
+
 
 @Serializable
 data class DummyJSONUserList(
@@ -88,5 +99,24 @@ class UsersRepo {
         }
     }.flowOn(Dispatchers.IO)
 
+    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>> = flow {
+        emit(DataStatus.Loading)
+        try {
+            val response = client.get(BASE_URL) {
+                url {
+                    appendPathSegments("users/$id")
+                }
+            }
+            if (response.status.value in 200..299) {
+                val user = response.body<DummyJSONUser>()
+                emit(DataStatus.Success(user))
+            }
+            else if (response.status.value >= 400) {
+                emit(DataStatus.Error(Exception(response.status.description)))
+            }
+        } catch (e: Exception) {
+            emit(DataStatus.Error(Exception(e.localizedMessage)))
+        }
+    }.flowOn(Dispatchers.IO)
 
 }

@@ -4,7 +4,8 @@ import com.herkiewaxmann.userdirectory.data.DummyJSONUser
 
 data class User(
     val id: Int,
-    val name: String
+    val name: String,
+    val imageUrl: String? = null
 )
 
 val InvalidUser = User(-1, "Unknown")
@@ -12,6 +13,10 @@ val InvalidUser = User(-1, "Unknown")
 class UserTransformer() {
     companion object {
         fun fromDummyJSONUser(user: DummyJSONUser) =
-            User(user.id, "${user.firstName} ${user.lastName}")
+            User(
+                id = user.id,
+                name = "${user.firstName} ${user.lastName}",
+                imageUrl = user.image
+            )
     }
 }
