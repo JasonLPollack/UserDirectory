@@ -7,8 +7,11 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.appendPathSegments
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -62,6 +65,28 @@ class UsersRepo {
             println("Bad bad bad")
             emit(DataStatus.Error(Exception(e.localizedMessage)))
         }
-    }
+    }.flowOn(Dispatchers.IO)
+
+    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>> = flow {
+        emit(DataStatus.Loading)
+        try {
+            val response = client.get(BASE_URL) {
+                url {
+                    appendPathSegments("users/search")
+                    parameters.append("q", name)
+                }
+            }
+            if (response.status.value in 200..299) {
+                val userList = response.body<DummyJSONUserList>()
+                emit(DataStatus.Success(userList))
+            }
+            else if (response.status.value >= 400) {
+                emit(DataStatus.Error(Exception(response.status.description)))
+            }
+        } catch (e: Exception) {
+            emit(DataStatus.Error(Exception(e.localizedMessage)))
+        }
+    }.flowOn(Dispatchers.IO)
+
 
 }

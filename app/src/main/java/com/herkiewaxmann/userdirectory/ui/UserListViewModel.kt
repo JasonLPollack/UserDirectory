@@ -1,5 +1,6 @@
 package com.herkiewaxmann.userdirectory.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.herkiewaxmann.userdirectory.data.DataStatus
@@ -24,18 +25,23 @@ class UserListViewModel: ViewModel() {
     val repo = UsersRepo()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        queryAllUsers()
+    }
+
+    fun getUserById(id: Int): User? = _state.value.users.firstOrNull { it.id == id }
+
+    fun queryAllUsers() {
+        viewModelScope.launch {
             repo.getUsers().collect { dataStatus ->
                 when (dataStatus) {
                     is DataStatus.Loading -> {
-                        println("Loading Users")
+                        _state.value = _state.value.copy(loading = true)
                     }
                     is DataStatus.Error -> {
-                        println("Uh oh! Error loading users")
+                        Log.e("UserList", dataStatus.exception.localizedMessage)
                         _state.value = _state.value.copy(loading = false)
                     }
                     is DataStatus.Success -> {
-                        println("Success! Got ${dataStatus.data.users.size} users")
                         val userList = dataStatus.data.users.map {
                             UserTransformer.fromDummyJSONUser(it)
                         }
@@ -49,6 +55,29 @@ class UserListViewModel: ViewModel() {
         }
     }
 
-    fun getUserById(id: Int): User? = _state.value.users.firstOrNull { it.id == id }
-
+    fun queryUsersByName(name: String) {
+        viewModelScope.launch {
+            repo.getUsersByName(name).collect { dataStatus ->
+                when (dataStatus) {
+                    is DataStatus.Loading -> {
+                        _state.value = _state.value.copy(loading = true)
+                    }
+                    is DataStatus.Error -> {
+                        Log.e("UserList", dataStatus.exception.localizedMessage)
+                        println("Uh oh! Error loading users")
+                        _state.value = _state.value.copy(loading = false)
+                    }
+                    is DataStatus.Success -> {
+                        val userList = dataStatus.data.users.map {
+                            UserTransformer.fromDummyJSONUser(it)
+                        }
+                        _state.value = _state.value.copy(
+                            loading = false,
+                            users = userList
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
