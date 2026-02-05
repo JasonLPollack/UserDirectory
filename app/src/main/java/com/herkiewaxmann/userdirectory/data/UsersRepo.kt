@@ -52,7 +52,6 @@ class UsersRepo {
                 }
             }
             if (response.status.value in 200..299) {
-                val raw = response.body<String>()
                 val userList = response.body<DummyJSONUserList>()
                 emit(DataStatus.Success(userList))
             }
