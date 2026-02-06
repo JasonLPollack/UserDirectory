@@ -15,15 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun UserDetail(
     id: Int,
     onBack: () -> Unit
 ) {
-    val userDetailViewModel: UserDetailViewModel = viewModel()
+    val userDetailViewModel: UserDetailViewModel = koinViewModel()
     val userState by userDetailViewModel.state.collectAsState()
 
     LaunchedEffect(id) {

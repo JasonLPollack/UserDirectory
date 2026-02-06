@@ -45,7 +45,15 @@ data class DummyJSONUserList(
     val users: List<DummyJSONUser>
 )
 
-class UsersRepo {
+interface UsersRepo {
+    fun getUsers(): Flow<DataStatus<DummyJSONUserList>>
+
+    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>>
+
+    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>>
+}
+
+class UsersRepoImpl: UsersRepo {
     companion object {
         const val BASE_URL = "https://dummyjson.com"
     }
@@ -57,7 +65,7 @@ class UsersRepo {
         }
     }
 
-    fun getUsers(): Flow<DataStatus<DummyJSONUserList>> = flow {
+    override fun getUsers(): Flow<DataStatus<DummyJSONUserList>> = flow {
         emit(DataStatus.Loading)
         try {
             val response = client.get(BASE_URL) {
@@ -78,7 +86,7 @@ class UsersRepo {
         }
     }.flowOn(Dispatchers.IO)
 
-    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>> = flow {
+    override fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>> = flow {
         emit(DataStatus.Loading)
         try {
             val response = client.get(BASE_URL) {
@@ -99,7 +107,7 @@ class UsersRepo {
         }
     }.flowOn(Dispatchers.IO)
 
-    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>> = flow {
+    override fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>> = flow {
         emit(DataStatus.Loading)
         try {
             val response = client.get(BASE_URL) {
