@@ -3,13 +3,13 @@ package com.herkiewaxmann.userdirectory.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.herkiewaxmann.userdirectory.data.DataStatus
+import com.herkiewaxmann.userdirectory.R
 import com.herkiewaxmann.userdirectory.data.UsersRepo
+import com.herkiewaxmann.userdirectory.domain.DataStatus
 import com.herkiewaxmann.userdirectory.domain.User
 import com.herkiewaxmann.userdirectory.domain.UserTransformer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -17,7 +17,9 @@ import kotlinx.coroutines.launch
 
 data class UserListState(
     val loading:Boolean = true,
-    val users: List<User> = emptyList()
+    val users: List<User> = emptyList(),
+    val searchTerm: String = "", // When empty, search all users
+    val errorMessage: String? = null
 )
 
 class UserListViewModel(
@@ -40,14 +42,20 @@ class UserListViewModel(
             repo.getUsers().collect { dataStatus ->
                 when (dataStatus) {
                     is DataStatus.Loading -> {
-                        _state.value = _state.value.copy(loading = true)
+                        _state.value = _state.value.copy(
+                            loading = true,
+                            errorMessage = null
+                        )
                     }
                     is DataStatus.Error -> {
                         Log.e(
                             "UserList",
-                            dataStatus.exception.localizedMessage.orEmpty()
+                            dataStatus.e.toString()
                         )
-                        _state.value = _state.value.copy(loading = false)
+                        _state.value = _state.value.copy(
+                            loading = false,
+                            errorMessage = "Error" // R.string.error_fetching
+                        )
                     }
                     is DataStatus.Success -> {
                         val userList = dataStatus.data.users.map {
@@ -55,7 +63,8 @@ class UserListViewModel(
                         }
                         _state.value = _state.value.copy(
                             loading = false,
-                            users = userList
+                            users = userList,
+                            errorMessage = null
                         )
                     }
                 }
@@ -68,15 +77,21 @@ class UserListViewModel(
             repo.getUsersByName(name).collect { dataStatus ->
                 when (dataStatus) {
                     is DataStatus.Loading -> {
-                        _state.value = _state.value.copy(loading = true)
+                        _state.value = _state.value.copy(
+                            loading = true,
+                            errorMessage = null
+                        )
                     }
                     is DataStatus.Error -> {
                         Log.e(
                             "UserList",
-                            dataStatus.exception.localizedMessage.orEmpty()
+                            dataStatus.e.toString()
                         )
                         println("Uh oh! Error loading users")
-                        _state.value = _state.value.copy(loading = false)
+                        _state.value = _state.value.copy(
+                            loading = false,
+                            errorMessage = "Error"
+                        )
                     }
                     is DataStatus.Success -> {
                         val userList = dataStatus.data.users.map {
@@ -84,7 +99,8 @@ class UserListViewModel(
                         }
                         _state.value = _state.value.copy(
                             loading = false,
-                            users = userList
+                            users = userList,
+                            errorMessage = null
                         )
                     }
                 }

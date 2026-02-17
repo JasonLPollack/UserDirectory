@@ -1,5 +1,7 @@
 package com.herkiewaxmann.userdirectory.data
 
+import com.herkiewaxmann.userdirectory.domain.DataStatus
+import com.herkiewaxmann.userdirectory.domain.RemoteNetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -11,15 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-sealed interface DataStatus<out T> {
-    object Loading: DataStatus<Nothing>
-    data class Error(val exception: Exception): DataStatus<Nothing>
-    data class Success<out T>(val data: T): DataStatus<T>
-}
 
 @Serializable
 data class DummyJSONAddress(
@@ -46,11 +42,11 @@ data class DummyJSONUserList(
 )
 
 interface UsersRepo {
-    fun getUsers(): Flow<DataStatus<DummyJSONUserList>>
+    fun getUsers(): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>>
 
-    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>>
+    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>>
 
-    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>>
+    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, RemoteNetworkError>>
 }
 
 class UsersRepoImpl: UsersRepo {
@@ -65,66 +61,77 @@ class UsersRepoImpl: UsersRepo {
         }
     }
 
-    override fun getUsers(): Flow<DataStatus<DummyJSONUserList>> = flow {
-        emit(DataStatus.Loading)
-        try {
-            val response = client.get(BASE_URL) {
-                url {
-                    appendPathSegments("users")
+    /**
+     * Fetch a list of all users (limited to 30 per API spec)
+     */
+    override fun getUsers(): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>> =
+        flow {
+            emit(DataStatus.Loading)
+            try {
+                val response = client.get(BASE_URL) {
+                    url {
+                        appendPathSegments("users")
+                    }
                 }
+                if (response.status.value in 200..299) {
+                    val userList = response.body<DummyJSONUserList>()
+                    emit(DataStatus.Success(userList))
+                }
+                else if (response.status.value >= 400) {
+                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                }
+            } catch (_: Exception) {
+                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
             }
-            if (response.status.value in 200..299) {
-                val userList = response.body<DummyJSONUserList>()
-                emit(DataStatus.Success(userList))
-            }
-            else if (response.status.value >= 400) {
-                emit(DataStatus.Error(Exception(response.status.description)))
-            }
-        } catch (e: Exception) {
-            println("Bad bad bad")
-            emit(DataStatus.Error(Exception(e.localizedMessage)))
-        }
-    }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO)
 
-    override fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList>> = flow {
-        emit(DataStatus.Loading)
-        try {
-            val response = client.get(BASE_URL) {
-                url {
-                    appendPathSegments("users/search")
-                    parameters.append("q", name)
+    /**
+     * Fetch a list of users matching the given name
+     */
+    override fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>> =
+        flow {
+            emit(DataStatus.Loading)
+            try {
+                val response = client.get(BASE_URL) {
+                    url {
+                        appendPathSegments("users/search")
+                        parameters.append("q", name)
+                    }
                 }
+                if (response.status.value in 200..299) {
+                    val userList = response.body<DummyJSONUserList>()
+                    emit(DataStatus.Success(userList))
+                }
+                else if (response.status.value >= 400) {
+                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                }
+            } catch (e: Exception) {
+                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
             }
-            if (response.status.value in 200..299) {
-                val userList = response.body<DummyJSONUserList>()
-                emit(DataStatus.Success(userList))
-            }
-            else if (response.status.value >= 400) {
-                emit(DataStatus.Error(Exception(response.status.description)))
-            }
-        } catch (e: Exception) {
-            emit(DataStatus.Error(Exception(e.localizedMessage)))
-        }
-    }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO)
 
-    override fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser>> = flow {
-        emit(DataStatus.Loading)
-        try {
-            val response = client.get(BASE_URL) {
-                url {
-                    appendPathSegments("users/$id")
+    /**
+     * Get user details based on the given user id
+     */
+    override fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, RemoteNetworkError>> =
+        flow {
+            emit(DataStatus.Loading)
+            try {
+                val response = client.get(BASE_URL) {
+                    url {
+                        appendPathSegments("users/$id")
+                    }
                 }
+                if (response.status.value in 200..299) {
+                    val user = response.body<DummyJSONUser>()
+                    emit(DataStatus.Success(user))
+                }
+                else if (response.status.value >= 400) {
+                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                }
+            } catch (_: Exception) {
+                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
             }
-            if (response.status.value in 200..299) {
-                val user = response.body<DummyJSONUser>()
-                emit(DataStatus.Success(user))
-            }
-            else if (response.status.value >= 400) {
-                emit(DataStatus.Error(Exception(response.status.description)))
-            }
-        } catch (e: Exception) {
-            emit(DataStatus.Error(Exception(e.localizedMessage)))
-        }
-    }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO)
 
 }
