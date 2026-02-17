@@ -28,6 +28,7 @@ class UserListViewModel(
     init {
         queryAllUsers()
     }
+
     fun queryAllUsers() {
         viewModelScope.launch {
             repo.getUsers().collect { dataStatus ->
