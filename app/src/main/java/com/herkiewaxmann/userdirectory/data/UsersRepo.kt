@@ -13,33 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-
-@Serializable
-data class DummyJSONAddress(
-    val city: String? = null,
-    val state: String? = null
-)
-
-@Serializable
-data class DummyJSONUser(
-    val id: Int,
-    val firstName: String,
-    val lastName: String,
-    val image: String,
-    val age: Int,
-    val email: String,
-    val phone: String,
-    val address: DummyJSONAddress
-)
-
-
-@Serializable
-data class DummyJSONUserList(
-    val users: List<DummyJSONUser>
-)
 
 interface UsersRepo {
     fun getUsers(): Flow<DataStatus<DummyJSONUserList, APIError>>
