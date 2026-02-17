@@ -6,8 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -65,11 +69,13 @@ fun UserDetailContent(
     loading: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
     ) {
         if (loading) {
             CircularProgressIndicator()
@@ -82,8 +88,10 @@ fun UserDetailContent(
                 AsyncImage(
                     modifier = Modifier
                         .padding(16.dp)
-                        .fillMaxWidth(),
+                        .width(256.dp)
+                        .height(256.dp),
                     model = user.imageUrl,
+                    placeholder = painterResource(R.drawable.outline_account_circle_24),
                     contentDescription = "Image for ${user.name}"
                 )
                 UserDetailRow(

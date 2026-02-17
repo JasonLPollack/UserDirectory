@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.herkiewaxmann.userdirectory.R
 import com.herkiewaxmann.userdirectory.domain.User
 
 @Composable
@@ -50,6 +52,7 @@ fun UserListEntry(
                     .padding(16.dp)
                     .size(32.dp, 32.dp),
                 model = user.imageUrl,
+                placeholder = painterResource(R.drawable.outline_account_circle_24),
                 contentDescription = "User Image for ${user.name}"
             )
             Text(

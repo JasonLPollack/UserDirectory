@@ -57,15 +57,12 @@ fun UserSearchBar(
                     trailingIcon = {
                         if (!textFieldState.text.isEmpty()) {
                             Icon(
-                                painterResource(R.drawable.sharp_add_circle_outline_24),
+                                painterResource(R.drawable.outline_cancel_24),
                                 contentDescription = stringResource(R.string.clear_search),
                                 modifier = Modifier.clickable {
                                     textFieldState.setTextAndPlaceCursorAtEnd("")
                                     onSearch(textFieldState.text.toString())
                                 }
-                                    .graphicsLayer {
-                                        rotationZ = 45.0f
-                                    }
                             )
                         }
                     }
