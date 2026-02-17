@@ -1,18 +1,18 @@
 package com.herkiewaxmann.userdirectory.ui
 
-import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,33 +24,61 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.herkiewaxmann.userdirectory.R
+import com.herkiewaxmann.userdirectory.domain.UserDetail
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
+fun UserDetailRow(
+    label: String,
+    value: String?
+) {
+    value?.let { value ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                "$label:",
+                textAlign = TextAlign.End,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(0.3f)
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(0.7f)
+            )
+        }
+    }
+}
+
+@Composable
 fun UserDetailContent(
-    id: Int,
+    user: UserDetail?,
+    loading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val userDetailViewModel: UserDetailViewModel = koinViewModel()
-    val userState by userDetailViewModel.state.collectAsState()
-
-    LaunchedEffect(id) {
-        userDetailViewModel.queryUserById(id)
-    }
-
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
     ) {
-        if (userState.loading) {
+        if (loading) {
             CircularProgressIndicator()
         } else {
-            userState.user?.let { user ->
+            user?.let { user ->
+                Text(
+                    text = user.name,
+                    style = MaterialTheme.typography.headlineLarge
+                )
                 AsyncImage(
                     modifier = Modifier
                         .padding(16.dp)
@@ -58,13 +86,18 @@ fun UserDetailContent(
                     model = user.imageUrl,
                     contentDescription = "Image for ${user.name}"
                 )
-                Text(user.name)
-                if (user.phone != null) {
-                    Text("Phone: ${user.phone}")
-                }
-                if (user.email != null) {
-                    Text("Email: ${user.email}")
-                }
+                UserDetailRow(
+                    stringResource(R.string.detail_phone),
+                    user.phone
+                )
+                UserDetailRow(
+                    stringResource(R.string.detail_email),
+                    user.email
+                )
+                UserDetailRow(
+                    stringResource(R.string.detail_location),
+                    user.location
+                )
             }
         }
     }
@@ -76,6 +109,12 @@ fun UserDetail(
     id: Int,
     onBack: () -> Unit
 ) {
+    val userDetailViewModel: UserDetailViewModel = koinViewModel()
+    val userState by userDetailViewModel.state.collectAsState()
+
+    LaunchedEffect(id) {
+        userDetailViewModel.queryUserById(id)
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -94,9 +133,39 @@ fun UserDetail(
         }
     ) { innerPadding ->
         UserDetailContent(
-            id,
+            userState.user,
+            userState.loading,
             Modifier.padding(innerPadding)
-
         )
+    }
+}
+
+@Preview
+@Composable
+fun UserDetailPreview() {
+    UserDetailContent(
+        user = UserDetail(
+            id = 1,
+            name = "John Doe",
+            phone = "301-555-1212",
+            email = "john.doe@nowhere.com"
+        ),
+        loading = false
+    )
+}
+
+@Preview
+@Composable
+fun UserDetailRowPreview() {
+    Column {
+        UserDetailRow(
+            "Phone" , // R.string.detail_phone,
+            "301-555-1212"
+        )
+        UserDetailRow(
+            "Email" , // R.string.detail_phone,
+            "john.doe@nowhere.com"
+        )
+
     }
 }
