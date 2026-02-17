@@ -9,9 +9,7 @@ import com.herkiewaxmann.userdirectory.domain.DataStatus
 import com.herkiewaxmann.userdirectory.domain.User
 import com.herkiewaxmann.userdirectory.domain.UserTransformer
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
@@ -24,24 +22,18 @@ data class UserListState(
 class UserListViewModel(
     private val repo: UsersRepo
 ): ViewModel() {
-    val _state = MutableStateFlow(UserListState())
+    val state : StateFlow<UserListState>
+        field = MutableStateFlow(UserListState())
 
-    // Use the .onStart() method to initialize data rather than in the init block.
-    // Would prefer to use kotlin explicit backing fields, but currently this is a bit messy.
-    val state = _state
-        .onStart { queryAllUsers() }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
-            UserListState()
-        )
-
+    init {
+        queryAllUsers()
+    }
     fun queryAllUsers() {
         viewModelScope.launch {
             repo.getUsers().collect { dataStatus ->
                 when (dataStatus) {
                     is DataStatus.Loading -> {
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = true,
                             errorMessage = null
                         )
@@ -51,7 +43,7 @@ class UserListViewModel(
                             "UserList",
                             dataStatus.e.toString()
                         )
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = false,
                             errorMessage = UiText.StringResource(R.string.error_fetching)
                         )
@@ -60,7 +52,7 @@ class UserListViewModel(
                         val userList = dataStatus.data.users.map {
                             UserTransformer.fromDummyJSONUser(it)
                         }
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = false,
                             users = userList,
                             errorMessage = null
@@ -76,7 +68,7 @@ class UserListViewModel(
             repo.getUsersByName(name).collect { dataStatus ->
                 when (dataStatus) {
                     is DataStatus.Loading -> {
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = true,
                             errorMessage = null
                         )
@@ -87,7 +79,7 @@ class UserListViewModel(
                             dataStatus.e.toString()
                         )
                         println("Uh oh! Error loading users")
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = false,
                             errorMessage = UiText.StringResource(
                                 R.string.error_fetching,
@@ -99,7 +91,7 @@ class UserListViewModel(
                         val userList = dataStatus.data.users.map {
                             UserTransformer.fromDummyJSONUser(it)
                         }
-                        _state.value = _state.value.copy(
+                        state.value = state.value.copy(
                             loading = false,
                             users = userList,
                             errorMessage = null
