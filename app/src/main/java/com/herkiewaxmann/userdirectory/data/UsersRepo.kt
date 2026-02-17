@@ -1,7 +1,7 @@
 package com.herkiewaxmann.userdirectory.data
 
 import com.herkiewaxmann.userdirectory.domain.DataStatus
-import com.herkiewaxmann.userdirectory.domain.RemoteNetworkError
+import com.herkiewaxmann.userdirectory.domain.APIError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -42,11 +42,11 @@ data class DummyJSONUserList(
 )
 
 interface UsersRepo {
-    fun getUsers(): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>>
+    fun getUsers(): Flow<DataStatus<DummyJSONUserList, APIError>>
 
-    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>>
+    fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, APIError>>
 
-    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, RemoteNetworkError>>
+    fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, APIError>>
 }
 
 class UsersRepoImpl: UsersRepo {
@@ -64,7 +64,7 @@ class UsersRepoImpl: UsersRepo {
     /**
      * Fetch a list of all users (limited to 30 per API spec)
      */
-    override fun getUsers(): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>> =
+    override fun getUsers(): Flow<DataStatus<DummyJSONUserList, APIError>> =
         flow {
             emit(DataStatus.Loading)
             try {
@@ -78,17 +78,17 @@ class UsersRepoImpl: UsersRepo {
                     emit(DataStatus.Success(userList))
                 }
                 else if (response.status.value >= 400) {
-                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                    emit(DataStatus.Error(APIError.GeneralNetworkError))
                 }
             } catch (_: Exception) {
-                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
+                emit(DataStatus.Error(APIError.ParsingError))
             }
         }.flowOn(Dispatchers.IO)
 
     /**
      * Fetch a list of users matching the given name
      */
-    override fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, RemoteNetworkError>> =
+    override fun getUsersByName(name: String): Flow<DataStatus<DummyJSONUserList, APIError>> =
         flow {
             emit(DataStatus.Loading)
             try {
@@ -103,17 +103,17 @@ class UsersRepoImpl: UsersRepo {
                     emit(DataStatus.Success(userList))
                 }
                 else if (response.status.value >= 400) {
-                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                    emit(DataStatus.Error(APIError.GeneralNetworkError))
                 }
             } catch (e: Exception) {
-                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
+                emit(DataStatus.Error(APIError.ParsingError))
             }
         }.flowOn(Dispatchers.IO)
 
     /**
      * Get user details based on the given user id
      */
-    override fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, RemoteNetworkError>> =
+    override fun getUserDetailById(id: Int): Flow<DataStatus<DummyJSONUser, APIError>> =
         flow {
             emit(DataStatus.Loading)
             try {
@@ -127,10 +127,10 @@ class UsersRepoImpl: UsersRepo {
                     emit(DataStatus.Success(user))
                 }
                 else if (response.status.value >= 400) {
-                    emit(DataStatus.Error(RemoteNetworkError.GeneralNetworkError))
+                    emit(DataStatus.Error(APIError.GeneralNetworkError))
                 }
             } catch (_: Exception) {
-                emit(DataStatus.Error(RemoteNetworkError.ParsingError))
+                emit(DataStatus.Error(APIError.ParsingError))
             }
         }.flowOn(Dispatchers.IO)
 

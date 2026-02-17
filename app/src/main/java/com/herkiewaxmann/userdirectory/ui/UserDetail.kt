@@ -14,8 +14,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.herkiewaxmann.userdirectory.R
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -58,7 +60,7 @@ fun UserDetail(
             }
         }
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
     }
 }

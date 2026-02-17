@@ -3,9 +3,13 @@
 
     <string name="user_detail_header">User Details</string>
     <string name="retry">Retry</string>
+    <string name="back">Back</string>
     <string name="search_users_hint">Search Users…</string>
+    <string name="fetch_no_results">No users found in the directory</string>
+    <string name="search_no_results">No users found matching \'%1$s\'</string>
 
     <!-- Error Messages -->
     <string name="error_fetching">Failed to retrieve list of users</string>
-    <string name="error_searching">Failed to retrieve list of users matching \'%1$s\'</string>
+
+
 </resources>

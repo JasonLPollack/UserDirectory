@@ -18,8 +18,7 @@ import kotlinx.coroutines.launch
 data class UserListState(
     val loading:Boolean = true,
     val users: List<User> = emptyList(),
-    val searchTerm: String = "", // When empty, search all users
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )
 
 class UserListViewModel(
@@ -54,7 +53,7 @@ class UserListViewModel(
                         )
                         _state.value = _state.value.copy(
                             loading = false,
-                            errorMessage = "Error" // R.string.error_fetching
+                            errorMessage = UiText.StringResource(R.string.error_fetching)
                         )
                     }
                     is DataStatus.Success -> {
@@ -90,7 +89,10 @@ class UserListViewModel(
                         println("Uh oh! Error loading users")
                         _state.value = _state.value.copy(
                             loading = false,
-                            errorMessage = "Error"
+                            errorMessage = UiText.StringResource(
+                                R.string.error_fetching,
+                                arrayOf(name)
+                            )
                         )
                     }
                     is DataStatus.Success -> {
